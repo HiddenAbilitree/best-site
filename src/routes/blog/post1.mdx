@@ -1,0 +1,131 @@
+---
+title: Can using `Math.random()` as a password work?
+description: A surely _silly_ idea... right?
+tags: ["javascript"]
+date: 2024-07-23
+notExpert: true
+---
+
+## Contents
+
+## What do you mean???
+
+I literally mean using `Math.random()` to generate passwords. Here's what this
+looks like:
+
+```javascript title="password.js" attribution="😬 this *seems* bad, right?"
+// yields something like 0.4972901589263987
+console.log(Math.random());
+```
+
+Not that complicated, right? It's fast, simple, and built into the JavaScript
+standard library.
+
+## Surely that can't be secure right?
+
+Let's (for the sake of this article) put aside the concern that:
+
+> "`Math.random()` does not provide cryptographically secure random numbers. Do
+> not use them for anything related to security. Use the Web Crypto API
+> instead, and more precisely the `Crypto.getRandomValues()` method."[^1]
+
+Before we go into analyzing the strength of the password, let's first try
+passing it through a password strength checker.
+
+A widely used password strengh checker is
+[dropbox/zxcvbn](https://github.com/dropbox/zxcvbn) which provides "_Low-Budget
+Password Strength Estimation_". This is what it has to say about the above
+generated password:
+
+![zxcvbn test page](zxcvbn.png "Using the `zxcvbn` [test page](https://lowe.github.io/tryzxcvbn/)")
+
+There are some obvious shortcomings when it comes to analyzing the password
+like this, though. For one, there are assumptions baked into `zxcvbn` like how
+passwords can be _not random_ and still be secure.
+
+If we assume that `Math.random()`'s output is random, this type of analysis
+might not be really all that useful. Assuming that the amount of "randomness"
+in a password is proportional to its security, we should instead try to analyze
+the amount of randomness instead.
+
+## Random Passwords
+
+Well, if every character in the password is just some value in the random number
+then we should probably figure out how many random characters there are in each
+password generation.
+
+```javascript title="character-count.js"
+const sample_count = 10_000_000;
+
+// first we find the mean of how many
+// characters are in a Math.random() password
+const dist = [...Array(sample_count)]
+  .map(() => Math.random().toString().length)
+  .reduce((m, v) => {
+    m[v] = (m[v] ?? 0) + 1;
+    return m;
+  }, {});
+```
+
+When we run the above code to find the amount of characters in a
+`Math.random()` output, we get the following distribution[^2]:
+
+![Distribution visualization](lengths.png "Distribution of character count in `Math.random()` passwords")
+
+We can actually find the mean random character length by running a little more
+code on the calculation:
+
+```javascript title="character-count.js"
+// results in 18.270232
+Object.entries(dist).reduce((sum, [k, v]) => sum + k * v, 0) / sample_count;
+```
+
+Since we know that each `Math.random()` call when turned into a string has a
+`0.` prefix, we can just take two off the mean random character count,
+resulting in $16.270232$ characters.
+
+With this information, we can take the number of possible characters each
+character could be (10, 0-9) and raise it to the power of this new value.
+
+$$
+{/* 10^{16.270232} \approx 1.863082129 \times 10^{16} */}
+$$
+
+This number roughly represents how many random combinations there are in the
+mean `Math.random()` password.
+
+Now compare this to just an alphanumeric password, to get the same level of
+"security", you can just solve for $x$ to get the number of characters:
+
+$$
+
+
+$$
+
+$$
+
+x \approx 9.077386430
+
+
+$$
+
+So, a `9.07` character random alphanumeric password is roughly equivalent to a
+`16.27` character `Math.random()` password, or rather the alphanumeric
+passwords are $1.792391690$ times more secure per character.
+
+## Conclusions
+
+1. Don't actually use this in practice
+2. `Math.random()` is not a "secure" source of randomness
+3. Only (roughly) as secure as a `9.07` character alphanumeric password
+4. If you repeat the math from earlier and include the top row symbols, a
+   `Math.random()` password is around `8.759` characters long
+
+[^1]: From the [MDN Web Docs](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Math/random) on `Math.random()`
+
+[^2]:
+    There are likely many ways to calculate this exactly, but an approximation
+    will suffice for the sake of this article.
+
+    $$
+    $$
