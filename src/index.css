@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 200 20% 98%;
+    --btn: 200 10% 91%;
+    --btn-hover: 200 10% 89%;
+    --foreground: 200 50% 3%;
+    --secondary: 195 6% 28%;
+    --component: 180 9% 91%;
+    --input: 0 0% 95%;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --primary: #a9b1d6;
+      --secondary: #787c99;
+      --accent: #bb9af7;
+      --neutral: #565f89;
+      --base: #25293c;
+      --info: #7dcfff;
+      --success: #9ece6a;
+      --warning: #e0af68;
+      --error: #db4b4b;
+    }
+  }
+}
+
+@layer base {
+  /* * { */
+  /* @apply border-foreground/20; */
+  /* } */
+}
